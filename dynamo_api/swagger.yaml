@@ -1,0 +1,16 @@
+openapi: 3.0.0
+
+paths:
+  /company/{companyId}:
+    put:
+      summary: This endpoint returns company confiable
+      parameters:
+        - name: companyId
+          in: path
+          required: true
+          description: Company uique id
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:getCompany/invocations"
+        httpMethod: "POST"

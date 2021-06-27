@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform:
+- AWS::Serverless-2016-10-31
+Description: my template
+Resources:
+  GetCompany:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: getCompany
+      Handler: bank.getCompany
+      Runtime: python3.6
+      CodeUri: s3://my-tefy-123/7d569902ed3661e9aa99775cdeeb70db
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: BankTable
+      - DynamoDBWritePolicy:
+          TableName:
+            Ref: BankTable
+      Environment:
+        Variables:
+          BANK_TABLE:
+            Ref: BankTable
+      Events:
+        GetCompany:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: MyAPI
+            Path: /company/{companyId}
+            Method: PUT
+  MyAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: bank-api
+      StageName: prod
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: s3://my-tefy-123/4c754491647ca63b4a8d6120bea0ce24
+  BankTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: bank-table
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      KeySchema:
+      - AttributeName: pk
+        KeyType: HASH
+      - AttributeName: sk
+        KeyType: RANGE
+      AttributeDefinitions:
+      - AttributeName: pk
+        AttributeType: S
+      - AttributeName: sk
+        AttributeType: S
