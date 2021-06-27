@@ -1,0 +1,9 @@
+
+AWSTemplateFormatVersion : '2010-09-09'
+
+Description: my template
+Resources:
+    TheBucket:
+        Type: AWS::S3::Bucket
+        Properties:
+            BucketName: my-tefy-1234
