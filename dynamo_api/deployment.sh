@@ -1,5 +1,5 @@
 #!/bin/bash
-DEPLOYMENT_BUCKET="my-tefy-123"
+DEPLOYMENT_BUCKET="finalproject-smm"
 
 while getopts ":bdp" OPTION; do
     case $OPTION in
