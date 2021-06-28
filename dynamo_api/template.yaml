@@ -82,6 +82,9 @@ Resources:
         Policies:
           - DynamoDBWritePolicy:
               TableName: !Ref BankTable
+          - DynamoDBReadPolicy:
+              TableName: !Ref BankTable
+          
         #Role: !GetAtt MyLambdaRole.Arn
         Environment:
           Variables:

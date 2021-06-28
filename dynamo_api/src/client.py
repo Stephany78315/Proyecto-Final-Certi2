@@ -62,7 +62,7 @@ def putClient(event, context):
     
     return {
         'statusCode': 200,
-        'body': json.dumps('Hello from Lambda!')
+        'body': json.dumps('CLIENE CORRECTAMENTE AGREGADO')
     }
     
     
@@ -93,16 +93,21 @@ def putTransaction(event, context):
             'sk': 'info'
         }
     )
+    print("printing response1", response1)
+    
     item_emisor = response1['Item']
    
     company_id = item_emisor['company']
-    company_p = "company/" + company_id
+    company_p = "/company/" + company_id
     
     prueba = {'path': company_p, 'try': "trying" } 
     
-    answer = bank.getCompany(json.dumps(prueba), json.dumps(prueba))
-    answer2= json.loads(answer)
-    if (answer2['body'] is "Confiable"):
+    answer = bank.getCompany(prueba, prueba)
+    
+    print(json.dumps(answer))
+    #answer2= json.loads(answer)
+    
+    if "No Confiable" not in (answer['body']) :
         #seguimos con el procesos
     
         #### 2. verificar el dinero suficiente the emisor
@@ -121,6 +126,7 @@ def putTransaction(event, context):
         else:
             ##seguimos con el proceso
             #### 3. quitar el dinero de emisor
+            newMoney = str(moneyLeft) + "$"
             
             table.put_item(
                 Item={
@@ -128,7 +134,7 @@ def putTransaction(event, context):
                     'sk': 'info',
                     'name': item_emisor['name'],
                     'lastName': item_emisor['lastName'],
-                    'moneyInAccount': moneyLeft + "$",
+                    'moneyInAccount': newMoney ,
                     'company': item_emisor['company'],
                     'salaryPerMonth': item_emisor['salaryPerMonth']
                     
@@ -145,11 +151,13 @@ def putTransaction(event, context):
                     'sk': 'info'
                 }
             )
+            print("printing response4", json.dumps(response4))
             item_receptor = response4['Item']
             
             dineroReceptor = item_receptor['moneyInAccount'].replace("$","")
             montoTotal = int(dineroReceptor) + int(montoStr)
             
+            newMoney2 =  str(montoTotal) + "$"
             
             table.put_item(
                 Item={
@@ -157,7 +165,7 @@ def putTransaction(event, context):
                     'sk': 'info',
                     'name': item_receptor['name'],
                     'lastName': item_receptor['lastName'],
-                    'moneyInAccount': montoTotal + "$",
+                    'moneyInAccount': newMoney2,
                     'company': item_receptor['company'],
                     'salaryPerMonth': item_receptor['salaryPerMonth']
                     
