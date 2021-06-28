@@ -72,7 +72,27 @@ Resources:
   
   
   
-  
+  PutTransaction:
+    Type: AWS::Serverless::Function
+    Properties:
+        FunctionName: putTransaction
+        Handler: client.putTransaction
+        Runtime: python3.6
+        CodeUri: package/
+        Policies:
+          - DynamoDBWritePolicy:
+              TableName: !Ref BankTable
+        #Role: !GetAtt MyLambdaRole.Arn
+        Environment:
+          Variables:
+            BANK_TABLE: !Ref BankTable
+        Events:
+            GetClients:
+              Type: Api
+              Properties:
+                RestApiId: !Ref MyAPI
+                Path: "/transactions/{transaction_id}"
+                Method: PUT
   
   
   ####ANDREA END

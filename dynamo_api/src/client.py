@@ -1,11 +1,15 @@
 import os
 import boto3
 import json
+import bank
+
 from boto3.dynamodb.conditions import Key
 clients_table = os.environ['BANK_TABLE'] 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(clients_table)
 
+
+##START ANDREA
 def getClient(event, context):
     print(json.dumps({"running": True}))
     print(json.dumps(event))
@@ -60,5 +64,140 @@ def putClient(event, context):
         'statusCode': 200,
         'body': json.dumps('Hello from Lambda!')
     }
+    
+    
+def putTransaction(event, context):
+    print(json.dumps({"running": True}))
+    print(json.dumps(event))
+    
+    path = event["path"]    #user/123
+    print("Imprimiendo paht:",path)
+    array_path = path.split("/") ##[user,123]
+    transaction_id = array_path[-1]
+    
+    body = event["body"]   
+    body_obj = json.loads(body)
+    
+    print("Imprimiendo path:",transaction_id)
+    
+    #### 1. analyse the company before adding the transaction  , getClient -> get company -> verificar commpany
+    
+    emisor = body_obj['emisor']
+    receptor = body_obj['receptor']
+    montoStr = body_obj['monto']
+    
+    #getClient emisor
+    response1 = table.get_item(
+        Key={
+            'pk': emisor,
+            'sk': 'info'
+        }
+    )
+    item_emisor = response1['Item']
+   
+    company_id = item_emisor['company']
+    company_p = "company/" + company_id
+    
+    prueba = {'path': company_p, 'try': "trying" } 
+    
+    answer = bank.getCompany(json.dumps(prueba), json.dumps(prueba))
+    answer2= json.loads(answer)
+    if (answer2['body'] is "Confiable"):
+        #seguimos con el procesos
+    
+        #### 2. verificar el dinero suficiente the emisor
+    
+        dineroEmisor = item_emisor['moneyInAccount']
+        dineroEmisor =  dineroEmisor.replace("$","")
+        
+        montoStr = montoStr.replace("$","")
+        
+        moneyLeft = int( dineroEmisor) - int(montoStr)
+        if ( moneyLeft < 0 ):
+            return {
+            'statusCode': 200,
+            'body': json.dumps('TRANSACCION NO COMPLETADA, DINERO SUPERIOR AL POSEIDO')
+            }
+        else:
+            ##seguimos con el proceso
+            #### 3. quitar el dinero de emisor
+            
+            table.put_item(
+                Item={
+                    'pk': emisor,
+                    'sk': 'info',
+                    'name': item_emisor['name'],
+                    'lastName': item_emisor['lastName'],
+                    'moneyInAccount': moneyLeft + "$",
+                    'company': item_emisor['company'],
+                    'salaryPerMonth': item_emisor['salaryPerMonth']
+                    
+               
+                }
+            )
+            
+            #### 4. add el dinero a receptor
+            
+            #getClient receptor
+            response4 = table.get_item(
+                Key={
+                    'pk': receptor,
+                    'sk': 'info'
+                }
+            )
+            item_receptor = response4['Item']
+            
+            dineroReceptor = item_receptor['moneyInAccount'].replace("$","")
+            montoTotal = int(dineroReceptor) + int(montoStr)
+            
+            
+            table.put_item(
+                Item={
+                    'pk': receptor,
+                    'sk': 'info',
+                    'name': item_receptor['name'],
+                    'lastName': item_receptor['lastName'],
+                    'moneyInAccount': montoTotal + "$",
+                    'company': item_receptor['company'],
+                    'salaryPerMonth': item_receptor['salaryPerMonth']
+                    
+               
+                }
+            )
+            
+            
+            #### 5. agregar la transaccion
+            
+            table.put_item(
+                Item={
+                    'pk': transaction_id,
+                    'sk': 'info',
+                    'emisor': body_obj['emisor'],
+                    'receptor': body_obj['receptor'],
+                    'monto': body_obj['monto'],
+                    'fecha': body_obj['fecha']
+                
+                    
+               
+                }
+            )
+    
+    else:
+        return {
+        'statusCode': 200,
+        'body': json.dumps('TRANSACCION NO COMPLETADA, COMPANY NO CONFIABLE')
+    }
+    
+   
+    
+    
+
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps('TRANSACCION CORRECTLY DONE')
+    }
+    ##END ANDREA
+    
     
     

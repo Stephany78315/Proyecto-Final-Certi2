@@ -65,7 +65,34 @@ paths:
         httpMethod: "POST"
   
   
-  
+  /transactions/{transaction_id}:
+    put:
+      summary: saves transaction info
+      requestBody:
+              required: true
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      emisor:
+                        type: string
+                      receptor:
+                        type: string
+                      monto:
+                        type: string
+                      fecha:
+                        type: string
+      parameters:
+        - name: transaction_id
+          in: path
+          required: true
+          description:  transaction unique id
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:putTransaction/invocations"
+        httpMethod: "POST"
   
   
   ###ANDREA END
