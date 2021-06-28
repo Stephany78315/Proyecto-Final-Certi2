@@ -1,41 +1,82 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform:
 - AWS::Serverless-2016-10-31
-Description: my template
+Description: Lambda Cloudformation
 Resources:
-  MyLambda:
+  GetClient:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: my-certi2-function
-      Handler: lambda.handler
+      FunctionName: getClient
+      Handler: client.getClient
       Runtime: python3.6
-      CodeUri: s3://my-tefy-123/3bb184aa2dd37c1685acaef4da87a8ee
-      Role:
-        Fn::GetAtt:
-        - MyLambdaRole
-        - Arn
-  MyLambdaRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: my-fp-role
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - lambda.amazonaws.com
-          Action:
-          - sts:AssumeRole
-      Path: /
+      CodeUri: s3://finalproject-smm/4480c2a167fe48eaaa5c9091fc57228c
       Policies:
-      - PolicyName: my-lambda-policy
-        PolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-          - Effect: Allow
-            Action:
-            - logs:CreateLogGroup
-            - logs:CreateLogStream
-            - logs:PutLogEvents
-            Resource: arn:aws:logs:*:*:*
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: ClientsTable
+      Environment:
+        Variables:
+          CLIENTS_TABLE:
+            Ref: ClientsTable
+      Events:
+        GetClients:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: MyAPI
+            Path: /clients/{client_id}
+            Method: GET
+  PutClient:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: putClient
+      Handler: client.putClient
+      Runtime: python3.6
+      CodeUri: s3://finalproject-smm/4480c2a167fe48eaaa5c9091fc57228c
+      Policies:
+      - DynamoDBWritePolicy:
+          TableName:
+            Ref: ClientsTable
+      Environment:
+        Variables:
+          CLIENTS_TABLE:
+            Ref: ClientsTable
+      Events:
+        GetClients:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: MyAPI
+            Path: /clients/{client_id}
+            Method: PUT
+  MyAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: client-api
+      StageName: prod
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: s3://finalproject-smm/799ea65a40a45ef9ca041c264502bc8f
+  ClientsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: clients-table
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      KeySchema:
+      - AttributeName: pk
+        KeyType: HASH
+      - AttributeName: sk
+        KeyType: RANGE
+      AttributeDefinitions:
+      - AttributeName: pk
+        AttributeType: S
+      - AttributeName: sk
+        AttributeType: S
+  BankTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      Fn::ImportValue: BankTable
