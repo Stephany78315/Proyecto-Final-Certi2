@@ -9,7 +9,7 @@ Resources:
       FunctionName: getCompany
       Handler: bank.getCompany
       Runtime: python3.6
-      CodeUri: s3://finalproject-smm/620d110cfbaff86218954067e099b544
+      CodeUri: s3://finalproject-smm/943a6ee7ed6c6c30f28d05d30a9d83ef
       Policies:
       - DynamoDBReadPolicy:
           TableName:
@@ -29,6 +29,78 @@ Resources:
               Ref: MyAPI
             Path: /company/{companyId}
             Method: PUT
+  GetClient:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: getClient
+      Handler: client.getClient
+      Runtime: python3.6
+      CodeUri: s3://finalproject-smm/943a6ee7ed6c6c30f28d05d30a9d83ef
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: BankTable
+      Environment:
+        Variables:
+          BANK_TABLE:
+            Ref: BankTable
+      Events:
+        GetClients:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: MyAPI
+            Path: /clients/{client_id}
+            Method: GET
+  PutClient:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: putClient
+      Handler: client.putClient
+      Runtime: python3.6
+      CodeUri: s3://finalproject-smm/943a6ee7ed6c6c30f28d05d30a9d83ef
+      Policies:
+      - DynamoDBWritePolicy:
+          TableName:
+            Ref: BankTable
+      Environment:
+        Variables:
+          BANK_TABLE:
+            Ref: BankTable
+      Events:
+        GetClients:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: MyAPI
+            Path: /clients/{client_id}
+            Method: PUT
+  PutTransaction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: putTransaction
+      Handler: client.putTransaction
+      Runtime: python3.6
+      CodeUri: s3://finalproject-smm/943a6ee7ed6c6c30f28d05d30a9d83ef
+      Policies:
+      - DynamoDBWritePolicy:
+          TableName:
+            Ref: BankTable
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: BankTable
+      Environment:
+        Variables:
+          BANK_TABLE:
+            Ref: BankTable
+      Events:
+        GetClients:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: MyAPI
+            Path: /transactions/{transaction_id}
+            Method: PUT
   MyAPI:
     Type: AWS::Serverless::Api
     Properties:
@@ -38,7 +110,7 @@ Resources:
         Fn::Transform:
           Name: AWS::Include
           Parameters:
-            Location: s3://finalproject-smm/4c754491647ca63b4a8d6120bea0ce24
+            Location: s3://finalproject-smm/33a0f1f0dbfa45d7dc61562179f1d455
   BankTable:
     Type: AWS::DynamoDB::Table
     Properties:
