@@ -1,0 +1,98 @@
+openapi: 3.0.0
+
+paths:
+  /company/{companyId}:
+    put:
+      summary: This endpoint returns company confiable
+      parameters:
+        - name: companyId
+          in: path
+          required: true
+          description: Company uique id
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:getCompany/invocations"
+        httpMethod: "POST"
+        
+        
+  ####ANDREA START
+  /clients/{client_id}:
+    get:
+      summary: This endpoint returns a client information given a client id
+      parameters:
+        - name: client_id
+          in: path
+          required: true
+          description:  client unique id
+          schema:
+            type : string
+            minimum: 1
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:getClient/invocations"
+        httpMethod: "POST"
+        
+    put:
+      summary: saves client info
+      requestBody:
+              required: true
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      lastName:
+                        type: string
+                      moneyInAccount:
+                        type: string
+                      company:
+                        type: string
+                      salaryPerMonth:
+                        type: string
+      parameters:
+        - name: client_id
+          in: path
+          required: true
+          description:  client unique id
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:putClient/invocations"
+        httpMethod: "POST"
+  
+  
+  /transactions/{transaction_id}:
+    put:
+      summary: saves transaction info
+      requestBody:
+              required: true
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      emisor:
+                        type: string
+                      receptor:
+                        type: string
+                      monto:
+                        type: string
+                      fecha:
+                        type: string
+      parameters:
+        - name: transaction_id
+          in: path
+          required: true
+          description:  transaction unique id
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:putTransaction/invocations"
+        httpMethod: "POST"
+  
+  
+  ###ANDREA END

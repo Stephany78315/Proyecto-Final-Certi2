@@ -1,0 +1,134 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform:
+  - AWS::Serverless-2016-10-31
+
+Description: my template
+Resources:
+  GetCompany:
+      Type: AWS::Serverless::Function
+      Properties:
+        FunctionName: getCompany
+        Handler: bank.getCompany
+        Runtime: python3.6
+        CodeUri: package/
+        Policies:
+          - DynamoDBReadPolicy:
+              TableName: !Ref BankTable
+          - DynamoDBWritePolicy:
+              TableName: !Ref BankTable
+        Environment:
+          Variables:
+            BANK_TABLE: !Ref BankTable
+        Events:
+          GetCompany:
+            Type: Api
+            Properties:
+              RestApiId: !Ref MyAPI
+              Path: "/company/{companyId}"
+              Method: PUT
+  ####ANDREA START
+  GetClient:
+    Type: AWS::Serverless::Function
+    Properties:
+        FunctionName: getClient
+        Handler: client.getClient
+        Runtime: python3.6
+        CodeUri: package/
+        #Role: !GetAtt MyLambdaRole.Arn
+        Policies:
+          - DynamoDBReadPolicy:
+              TableName: !Ref BankTable
+        Environment:
+          Variables:
+            BANK_TABLE: !Ref BankTable
+        Events:
+            GetClients:
+              Type: Api
+              Properties:
+                RestApiId: !Ref MyAPI
+                Path: "/clients/{client_id}"
+                Method: GET
+  PutClient:
+    Type: AWS::Serverless::Function
+    Properties:
+        FunctionName: putClient
+        Handler: client.putClient
+        Runtime: python3.6
+        CodeUri: package/
+        Policies:
+          - DynamoDBWritePolicy:
+              TableName: !Ref BankTable
+        #Role: !GetAtt MyLambdaRole.Arn
+        Environment:
+          Variables:
+            BANK_TABLE: !Ref BankTable
+        Events:
+            GetClients:
+              Type: Api
+              Properties:
+                RestApiId: !Ref MyAPI
+                Path: "/clients/{client_id}"
+                Method: PUT
+  
+  
+  
+  PutTransaction:
+    Type: AWS::Serverless::Function
+    Properties:
+        FunctionName: putTransaction
+        Handler: client.putTransaction
+        Runtime: python3.6
+        CodeUri: package/
+        Policies:
+          - DynamoDBWritePolicy:
+              TableName: !Ref BankTable
+          - DynamoDBReadPolicy:
+              TableName: !Ref BankTable
+          
+        #Role: !GetAtt MyLambdaRole.Arn
+        Environment:
+          Variables:
+            BANK_TABLE: !Ref BankTable
+        Events:
+            GetClients:
+              Type: Api
+              Properties:
+                RestApiId: !Ref MyAPI
+                Path: "/transactions/{transaction_id}"
+                Method: PUT
+  
+  
+  ####ANDREA END
+  
+  MyAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: bank-api
+      StageName: prod
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: swagger.yaml
+            
+  BankTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: bank-table
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+        
+
+
+
