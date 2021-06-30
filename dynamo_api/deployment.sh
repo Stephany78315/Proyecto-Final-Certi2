@@ -1,5 +1,5 @@
 #!/bin/bash
-DEPLOYMENT_BUCKET="myaws-upb-bucket"
+DEPLOYMENT_BUCKET="my-tefy-123"
 
 while getopts ":bdp" OPTION; do
     case $OPTION in

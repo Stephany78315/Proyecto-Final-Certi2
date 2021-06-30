@@ -9,7 +9,7 @@ Resources:
       FunctionName: getCompany
       Handler: bank.getCompany
       Runtime: python3.6
-      CodeUri: s3://my-tefy-123/503086d0e6b5089ed9f6f5c0e12233b8
+      CodeUri: s3://my-tefy-123/1c2170fe026d76fecf26d4a2ead407aa
       Policies:
       - DynamoDBReadPolicy:
           TableName:
@@ -35,7 +35,7 @@ Resources:
       FunctionName: getClient
       Handler: client.getClient
       Runtime: python3.6
-      CodeUri: s3://myaws-upb-bucket/a7737919ac8ce5dd457d4b075c83dfa0
+      CodeUri: s3://my-tefy-123/1c2170fe026d76fecf26d4a2ead407aa
       Policies:
       - DynamoDBReadPolicy:
           TableName:
@@ -58,7 +58,7 @@ Resources:
       FunctionName: putClient
       Handler: client.putClient
       Runtime: python3.6
-      CodeUri: s3://myaws-upb-bucket/a7737919ac8ce5dd457d4b075c83dfa0
+      CodeUri: s3://my-tefy-123/1c2170fe026d76fecf26d4a2ead407aa
       Policies:
       - DynamoDBWritePolicy:
           TableName:
@@ -81,7 +81,7 @@ Resources:
       FunctionName: putTransaction
       Handler: client.putTransaction
       Runtime: python3.6
-      CodeUri: s3://myaws-upb-bucket/a7737919ac8ce5dd457d4b075c83dfa0
+      CodeUri: s3://my-tefy-123/1c2170fe026d76fecf26d4a2ead407aa
       Policies:
       - DynamoDBWritePolicy:
           TableName:
@@ -99,8 +99,31 @@ Resources:
           Properties:
             RestApiId:
               Ref: MyAPI
-            Path: /transactions/{transaction_id}
+            Path: /transactions
             Method: PUT
+  GetTransaction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: getTransaction
+      Handler: client.getTransaction
+      Runtime: python3.6
+      CodeUri: s3://my-tefy-123/1c2170fe026d76fecf26d4a2ead407aa
+      Policies:
+      - DynamoDBReadPolicy:
+          TableName:
+            Ref: BankTable
+      Environment:
+        Variables:
+          BANK_TABLE:
+            Ref: BankTable
+      Events:
+        GetClients:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: MyAPI
+            Path: /transactions/{transaction_id}
+            Method: GET
   MyAPI:
     Type: AWS::Serverless::Api
     Properties:
@@ -110,7 +133,7 @@ Resources:
         Fn::Transform:
           Name: AWS::Include
           Parameters:
-            Location: s3://myaws-upb-bucket/33a0f1f0dbfa45d7dc61562179f1d455
+            Location: s3://my-tefy-123/487be42431fd48016dd385b23b3918e1
   BankTable:
     Type: AWS::DynamoDB::Table
     Properties:

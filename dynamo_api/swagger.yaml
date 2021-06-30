@@ -33,7 +33,7 @@ paths:
         uri:
           Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:getClient/invocations"
         httpMethod: "POST"
-        
+  
     put:
       summary: saves client info
       requestBody:
@@ -65,7 +65,7 @@ paths:
         httpMethod: "POST"
   
   
-  /transactions/{transaction_id}:
+  /transactions:
     put:
       summary: saves transaction info
       requestBody:
@@ -93,6 +93,21 @@ paths:
         uri:
           Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:putTransaction/invocations"
         httpMethod: "POST"
-  
+  /transactions/{transaction_id}:
+    get:
+      summary: This endpoint returns a client information given a client id
+      parameters:
+        - name: transaction_id
+          in: path
+          required: true
+          description:  transaction unique id
+          schema:
+            type : string
+            minimum: 1
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        uri:
+          Fn::Sub: "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:getTransaction/invocations"
+        httpMethod: "POST"
   
   ###ANDREA END
