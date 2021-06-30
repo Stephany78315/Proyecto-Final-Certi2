@@ -9,7 +9,7 @@ Resources:
       FunctionName: getCompany
       Handler: bank.getCompany
       Runtime: python3.6
-      CodeUri: s3://myaws-upb-bucket/a7737919ac8ce5dd457d4b075c83dfa0
+      CodeUri: s3://my-tefy-123/503086d0e6b5089ed9f6f5c0e12233b8
       Policies:
       - DynamoDBReadPolicy:
           TableName:
