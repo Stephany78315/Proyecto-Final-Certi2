@@ -9,7 +9,7 @@ Resources:
       FunctionName: getCompany
       Handler: bank.getCompany
       Runtime: python3.6
-      CodeUri: s3://finalproject-smm/943a6ee7ed6c6c30f28d05d30a9d83ef
+      CodeUri: s3://myaws-upb-bucket/a7737919ac8ce5dd457d4b075c83dfa0
       Policies:
       - DynamoDBReadPolicy:
           TableName:
@@ -35,7 +35,7 @@ Resources:
       FunctionName: getClient
       Handler: client.getClient
       Runtime: python3.6
-      CodeUri: s3://finalproject-smm/943a6ee7ed6c6c30f28d05d30a9d83ef
+      CodeUri: s3://myaws-upb-bucket/a7737919ac8ce5dd457d4b075c83dfa0
       Policies:
       - DynamoDBReadPolicy:
           TableName:
@@ -58,7 +58,7 @@ Resources:
       FunctionName: putClient
       Handler: client.putClient
       Runtime: python3.6
-      CodeUri: s3://finalproject-smm/943a6ee7ed6c6c30f28d05d30a9d83ef
+      CodeUri: s3://myaws-upb-bucket/a7737919ac8ce5dd457d4b075c83dfa0
       Policies:
       - DynamoDBWritePolicy:
           TableName:
@@ -81,7 +81,7 @@ Resources:
       FunctionName: putTransaction
       Handler: client.putTransaction
       Runtime: python3.6
-      CodeUri: s3://finalproject-smm/943a6ee7ed6c6c30f28d05d30a9d83ef
+      CodeUri: s3://myaws-upb-bucket/a7737919ac8ce5dd457d4b075c83dfa0
       Policies:
       - DynamoDBWritePolicy:
           TableName:
@@ -110,7 +110,7 @@ Resources:
         Fn::Transform:
           Name: AWS::Include
           Parameters:
-            Location: s3://finalproject-smm/33a0f1f0dbfa45d7dc61562179f1d455
+            Location: s3://myaws-upb-bucket/33a0f1f0dbfa45d7dc61562179f1d455
   BankTable:
     Type: AWS::DynamoDB::Table
     Properties:

@@ -1,5 +1,5 @@
 #!/bin/bash
-DEPLOYMENT_BUCKET="finalproject-smm"
+DEPLOYMENT_BUCKET="myaws-upb-bucket"
 
 while getopts ":bdp" OPTION; do
     case $OPTION in

@@ -4,6 +4,8 @@ import json
 import bank
 
 from boto3.dynamodb.conditions import Key
+from boto3.dynamodb.conditions import Attr 
+
 clients_table = os.environ['BANK_TABLE'] 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(clients_table)
@@ -62,10 +64,10 @@ def putClient(event, context):
     
     return {
         'statusCode': 200,
-        'body': json.dumps('CLIENE CORRECTAMENTE AGREGADO')
+        'body': json.dumps('CLIENTE CORRECTAMENTE AGREGADO')
     }
-    
-    
+
+
 def putTransaction(event, context):
     print(json.dumps({"running": True}))
     print(json.dumps(event))
@@ -85,6 +87,7 @@ def putTransaction(event, context):
     emisor = body_obj['emisor']
     receptor = body_obj['receptor']
     montoStr = body_obj['monto']
+    fecha = body_obj['fecha']
     
     #getClient emisor
     response1 = table.get_item(
@@ -110,10 +113,31 @@ def putTransaction(event, context):
     if "No Confiable" not in (answer['body']) :
         #seguimos con el procesos
     
+        responseT = table.scan(
+            
+            ##KeyConditionExpression=Key('pk').begins_with('transaction') & Key('sk').eq('info'),
+      
+            FilterExpression =Key('pk').begins_with('transaction') & Attr('emisor').eq(emisor) & Attr('fecha').eq(fecha) & Attr('receptor').eq(receptor)
+        )
+        
+        ##list_transactions = responseT['Items']
+        numTrans = 1
+        
+        for i in responseT['Items']:
+            numTrans = numTrans + 1
+            
+            
+        print("printing numero de transacciones:",numTrans)
+       ## numberTrans = len(list_transactions)
+        
+    
         #### 2. verificar el dinero suficiente the emisor
     
         dineroEmisor = item_emisor['moneyInAccount']
         dineroEmisor =  dineroEmisor.replace("$","")
+        
+        saldoEmisor = item_emisor['salaryPerMonth']
+        saldoEmisor =  saldoEmisor.replace("$","")
         
         montoStr = montoStr.replace("$","")
         
@@ -123,6 +147,22 @@ def putTransaction(event, context):
             'statusCode': 200,
             'body': json.dumps('TRANSACCION NO COMPLETADA, DINERO SUPERIOR AL POSEIDO')
             }
+        elif ( int(montoStr) > 20000 and int(saldoEmisor) < 2000 ):  ### Verificar anomalia 1
+            return {
+            'statusCode': 200,
+            'body': json.dumps('TRANSACCION NO COMPLETADA, SE ENCONTRO UNA ANOMALIA DE TIPO 1: SALARIO INSUFICIENTE PARA REALIZAR ESTA TRANSACCION')
+            }
+        elif (numTrans > 5): ### Verificar anomalia 2
+            return{
+            'statusCode': 200,
+            'body': json.dumps('TRANSACCION NO COMPLETADA, SE ENCONTRO UNA ANOMALIA DE TIPO 2: HA ALCANZADO EL LIMITE DE TRANSACCIONES EN UN DIA HACIA LA MISMA CUENTA')
+            }
+        elif ( int(montoStr) > 10000 and moneyLeft < 100): ### Verificar anomalia 3
+            return {
+            'statusCode': 200,
+            'body': json.dumps('TRANSACCION NO COMPLETADA, SE ENCONTRO UNA ANOMALIA DE TIPO 3: SALDO INSUFICIENTE PARA REALIZAR ESTA TRANSACCION')
+            }
+        
         else:
             ##seguimos con el proceso
             #### 3. quitar el dinero de emisor
