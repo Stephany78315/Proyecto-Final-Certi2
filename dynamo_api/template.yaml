@@ -70,7 +70,7 @@ Resources:
                 Path: "/clients/{client_id}"
                 Method: PUT
   
-  
+ 
   
   PutTransaction:
     Type: AWS::Serverless::Function
@@ -94,9 +94,29 @@ Resources:
               Type: Api
               Properties:
                 RestApiId: !Ref MyAPI
-                Path: "/transactions/{transaction_id}"
+                Path: "/transactions"
                 Method: PUT
-  
+  GetTransaction:
+    Type: AWS::Serverless::Function
+    Properties:
+        FunctionName: getTransaction
+        Handler: client.getTransaction
+        Runtime: python3.6
+        CodeUri: package/
+        #Role: !GetAtt MyLambdaRole.Arn
+        Policies:
+          - DynamoDBReadPolicy:
+              TableName: !Ref BankTable
+        Environment:
+          Variables:
+            BANK_TABLE: !Ref BankTable
+        Events:
+            GetClients:
+              Type: Api
+              Properties:
+                RestApiId: !Ref MyAPI
+                Path: "/transactions/{transaction_id}"
+                Method: GET
   
   ####ANDREA END
   

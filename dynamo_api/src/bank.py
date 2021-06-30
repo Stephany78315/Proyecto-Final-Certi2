@@ -18,16 +18,16 @@ def getCompany(event, context):
     print(json.dumps({"running": True}))
     print(json.dumps(event))
     
-    path = event["path"] # "/company/123"
+    path = event["path"] # "/company/company_123"
     array_path = path.split("/") # ["", "company", "123"]
     comp_id = array_path[-1]
     
-    id_empresa = "company_" + comp_id
+    #id_empresa = "company_" + comp_id
     
     print(json.dumps("antes de get Item"))
     response = table.get_item(
         Key={
-            'pk': id_empresa,
+            'pk': comp_id,
             'sk': "sk"
         }
     )
@@ -65,13 +65,13 @@ def getCompany(event, context):
         encontrado = False
         
         for i in data_json:
-            if i["id"] == id_empresa:
+            if i["id"] == comp_id:
                 encontrado = True
                 print(json.dumps("entra al if"))
                 print(json.dumps(i))
                 table.put_item(
                     Item={
-                        'pk': id_empresa,
+                        'pk': comp_id,
                         'sk': 'sk',
                         'Confiable': 'Si'
                     }
@@ -85,7 +85,7 @@ def getCompany(event, context):
         if encontrado == False:
             table.put_item(
                     Item={
-                        'pk': id_empresa,
+                        'pk': comp_id,
                         'sk': 'sk',
                         'Confiable': 'No'
                     }
