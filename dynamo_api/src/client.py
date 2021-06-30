@@ -10,6 +10,7 @@ clients_table = os.environ['BANK_TABLE']
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(clients_table)
 
+client = boto3.dynamodb
 
 ##START ANDREA
 def getClient(event, context):
@@ -248,4 +249,169 @@ def putTransaction(event, context):
     ##END ANDREA
     
     
+def putTransaction2(event, context):
+    print(json.dumps({"running": True}))
+    print(json.dumps(event))
     
+    path = event["path"]    #user/123
+    print("Imprimiendo paht:",path)
+    array_path = path.split("/") ##[user,123]
+    transaction_id = array_path[-1]
+    
+    body = event["body"]   
+    body_obj = json.loads(body)
+    
+    print("Imprimiendo path:",transaction_id)
+    
+    #### 1. analyse the company before adding the transaction  , getClient -> get company -> verificar commpany
+    
+    emisor = body_obj['emisor']
+    receptor = body_obj['receptor']
+    montoStr = body_obj['monto']
+    fecha = body_obj['fecha']
+    
+    #getClient emisor
+    response1 = table.get_item(
+        Key={
+            'pk': emisor,
+            'sk': 'info'
+        }
+    )
+    print("printing response1", response1)
+    
+    item_emisor = response1['Item']
+   
+    company_id = item_emisor['company']
+    company_p = "/company/" + company_id
+    
+    prueba = {'path': company_p, 'try': "trying" } 
+    
+    answer = bank.getCompany(prueba, prueba)
+    
+    print(json.dumps(answer))
+    #answer2= json.loads(answer)
+    if "No Confiable" not in (answer['body']) :
+    
+    #### 1. get del cliente emisor de la tambla
+    #### 1. analyse the company before adding the transaction  , getClient -> get company -> verificar commpany
+    
+    #     res2 = client.transactWriteItems({
+    #     TransactItems= [
+    #         {
+    #             Update: {
+    #                 TableName: 'items',
+    #                 Key: { id: { S: itemId } },
+    #                 ConditionExpression: 'available = :true',
+    #                 UpdateExpression: 'set available = :false, ' +
+    #                     'ownedBy = :player',
+    #                 ExpressionAttributeValues: {
+    #                     ':true': { BOOL: true },
+    #                     ':false': { BOOL: false },
+    #                     ':player': { S: playerId }
+    #                 }
+    #             }
+    #         },
+    #         {
+    #             Update: {
+    #                 TableName: 'players',
+    #                 Key: { id: { S: playerId } },
+    #                 ConditionExpression: 'coins >= :price',
+    #                 UpdateExpression: 'set coins = coins - :price, ' +
+    #                     'inventory = list_append(inventory, :items)',
+    #                 ExpressionAttributeValues: {
+    #                     ':items': { L: [{ S: itemId }] },
+    #                     ':price': { N: itemPrice.toString() }
+    #                 }
+    #             }
+    #         }
+    #     ]
+    # })
+        info_emisor = client.transact_get_items(
+            TransactItems=[
+                {
+                'Get': {
+                    'TableName': table,
+                    'Key': {
+                        'pk': { 'S': emisor },
+                        'sk': {'S': 'info'}
+                        
+                    },
+                    
+                }
+                
+                
+                }]
+            
+            )
+            
+        respo = client.transact_write_items(
+        TransactItems=[
+            {
+                'Put': {
+                    'TableName': table,
+                    'Item': {
+                        'pk': { 'S': 'USER#alexdebrie' },
+                        'SK': { 'S': 'USER#alexdebrie' },
+                        'Username': { 'S': 'alexdebrie' },
+                        'FirstName': { 'S': 'Alex' },
+                        
+                    },
+                    'ConditionExpression': '',
+                }
+            },
+            {
+                'Put': {
+                    'TableName': 'UsersTable',
+                    'Item': {
+                        'PK': { 'S': 'USEREMAIL#alex@debrie.com' },
+                        'SK': { 'S': 'USEREMAIL#alex@debrie.com' },
+                    },
+                    'ConditionExpression': 'attribute_not_exists(PK)'
+                }
+            }
+        ]
+    )
+    
+        response = client.execute_transaction(
+        TransactStatements=[{
+            'Statement': '(SELECT moneyInAccount FROM clients_table WHERE client_id = ?)',
+                'Parameters': [
+                    {
+                        'S': emisor
+                    },
+                ]
+            
+        },
+        {
+            'Statement': 'SELECT company FROM clients_table WHERE emisor = ?',
+                'Parameters': [
+                    {
+                        'S': emisor
+                    },
+                ]
+            
+            
+        }
+        
+            
+        ],
+            ClientRequestToken='string'
+        )
+    
+    else:
+        return {
+        'statusCode': 200,
+        'body': json.dumps('TRANSACCION NO COMPLETADA, COMPANY NO CONFIABLE')
+    }
+    
+   
+    
+    
+
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps('TRANSACCION CORRECTLY DONE')
+    }
+    
+    ##END ANDREA
