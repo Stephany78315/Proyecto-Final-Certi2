@@ -4,6 +4,40 @@ Transform:
 
 Description: my template
 Resources:
+  MyTransactionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: my-fp-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+            - dms.amazonaws.com
+            - dynamodb.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: my-lambda-policy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action: 
+            - dynamodb:ConditionCheckItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:GetItem
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: 
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:*
+              - arn:aws:logs:*:*
   GetCompany:
       Type: AWS::Serverless::Function
       Properties:
@@ -79,10 +113,13 @@ Resources:
         Handler: client.putTransaction
         Runtime: python3.6
         CodeUri: package/
+        #Role: !GetAtt MyTransactionRole.Arn
         Policies:
           - DynamoDBWritePolicy:
               TableName: !Ref BankTable
           - DynamoDBReadPolicy:
+              TableName: !Ref BankTable
+          - DynamoDBFullAccess:
               TableName: !Ref BankTable
           
         #Role: !GetAtt MyLambdaRole.Arn
@@ -129,6 +166,7 @@ Resources:
         - AttributeName: sk
           AttributeType: S
         
-
+  
+  
 
 

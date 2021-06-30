@@ -10,7 +10,7 @@ clients_table = os.environ['BANK_TABLE']
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table(clients_table)
 
-client = boto3.dynamodb
+client = boto3.client('dynamodb')
 
 ##START ANDREA
 def getClient(event, context):
@@ -32,7 +32,8 @@ def getClient(event, context):
     return {
         'statusCode': 200,
         'body': json.dumps(item)
-    }
+        }
+    
 
 def putClient(event, context):
     print(json.dumps({"running": True}))
@@ -248,7 +249,7 @@ def putTransaction(event, context):
     }
     ##END ANDREA
     
-    
+    #######################################################INTENTO FALLIDO DE putTransaction ########################
 def putTransaction2(event, context):
     print(json.dumps({"running": True}))
     print(json.dumps(event))
@@ -326,77 +327,116 @@ def putTransaction2(event, context):
     #         }
     #     ]
     # })
-        info_emisor = client.transact_get_items(
-            TransactItems=[
-                {
-                'Get': {
-                    'TableName': table,
-                    'Key': {
-                        'pk': { 'S': emisor },
-                        'sk': {'S': 'info'}
-                        
+        # print("antes info_emisor")
+        # try:
+        #     info_emisor1 = client.execute_transaction(
+        #         TransactStatements=[{
+        #         'Statement': 'SELECT * FROM "bank-table" WHERE "pk" = ?',
+        #             'Parameters': [
+        #                 {
+        #                     'S': emisor
+        #                 },
+        #             ]
+            
+        #     }])
+        #     return {
+        #     'statusCode': 200,
+        #     'body': json.dumps('good try')
+        #      }
+        
+        # except:
+        #     print("no funcion, en except")
+        
+        
+        # print("fin funcion")
+        
+        try:
+            info_emisor = client.transact_get_items(
+                TransactItems=[
+                    {
+                        "Get": {
+                            'TableName': 'bank-table',
+                            'Key': {
+                                "pk": { "S": emisor },
+                                'sk': { 'S': 'info' }
+                                
+                            },
+                            
+                        }
                     },
+                    {
+                        "Get": {
+                            'TableName': 'bank-table',
+                            'Key': {
+                                "pk": { "S": receptor },
+                                'sk': { 'S': 'info' }
+                                
+                            },
+                            
+                        }
                     
-                }
+                    }
+                    
+                    ]
                 
-                
-                }]
+                )
+            print(json.dumps(info_emisor))
             
-            )
+            responses = info_emisor['Responses']
+            print(json.dumps(responses[1]["Item"]["company"]["S"]))
             
+            ##info emisor
+            emisor_company = responses[1]["Item"]["company"]["S"]
+            emisor_money = responses[1]["Item"]["moneyInAccount"]["S"]
+            emisor_name = responses[1]["Item"]["name"]["S"]
+            emisor_lastname = responses[1]["Item"]["lastName"]["S"]
+            emisor_salary =  responses[1]["Item"]["salaryPerMonth"]["S"]
+            
+            ###info receptor
+            receptor_company = responses[2]["Item"]["company"]["S"]
+            receptor_money = responses[2]["Item"]["moneyInAccount"]["S"]
+            receptor_name = responses[2]["Item"]["name"]["S"]
+            receptor_lastname = responses[2]["Item"]["lastName"]["S"]
+            receptor_salary =  responses[2]["Item"]["salaryPerMonth"]["S"]
+            
+            #receptor_info = responses[2]["Item"]
+            print("type: "  , type(emisor_salary)  )
+            print("info emisor",json.dumps(emisor_salary))
+            
+            #print("info emisor company",json.dumps(emisor_info[1]))
+            #print("info emisor company",json.dumps(emisor_info["company"]))
+            
+            
+        except:
+            print("no da el get item, en except")
+        
+        
+        
         respo = client.transact_write_items(
         TransactItems=[
             {
-                'Put': {
-                    'TableName': table,
-                    'Item': {
-                        'pk': { 'S': 'USER#alexdebrie' },
-                        'SK': { 'S': 'USER#alexdebrie' },
-                        'Username': { 'S': 'alexdebrie' },
-                        'FirstName': { 'S': 'Alex' },
+                'Update': {
+                    'TableName': 'bank-table',
+                    'Key': {
+                        'pk': { 'S': emisor },
+                        'sk': { 'S': 'info' }
+                        
                         
                     },
-                    'ConditionExpression': '',
-                }
-            },
-            {
-                'Put': {
-                    'TableName': 'UsersTable',
-                    'Item': {
-                        'PK': { 'S': 'USEREMAIL#alex@debrie.com' },
-                        'SK': { 'S': 'USEREMAIL#alex@debrie.com' },
-                    },
-                    'ConditionExpression': 'attribute_not_exists(PK)'
+                    "ConditionExpression" : ":moneyE > :moneyT",
+                    "UpdateExpression": "Set moneyInAccount = :moneyE - :moneyT ",
+                    "ExpressionAttributeValues" :{
+                        ":moneyE":{"N": item_emisor['moneyInAccount'].replace("$","") },
+                        ":moneyT": {"N": body_obj['monto'].replace("$","") }
+                        
+                    
                 }
             }
-        ]
-    )
-    
-        response = client.execute_transaction(
-        TransactStatements=[{
-            'Statement': '(SELECT moneyInAccount FROM clients_table WHERE client_id = ?)',
-                'Parameters': [
-                    {
-                        'S': emisor
-                    },
-                ]
             
-        },
-        {
-            'Statement': 'SELECT company FROM clients_table WHERE emisor = ?',
-                'Parameters': [
-                    {
-                        'S': emisor
-                    },
-                ]
-            
-            
-        }
-        
-            
-        ],
-            ClientRequestToken='string'
+        }]
         )
+    
+        
     
     else:
         return {

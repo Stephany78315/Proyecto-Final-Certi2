@@ -3,13 +3,47 @@ Transform:
 - AWS::Serverless-2016-10-31
 Description: my template
 Resources:
+  MyTransactionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: my-fp-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+            - dms.amazonaws.com
+            - dynamodb.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: my-lambda-policy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - dynamodb:ConditionCheckItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:GetItem
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource:
+            - Fn::Sub: arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:*
+            - arn:aws:logs:*:*
   GetCompany:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: getCompany
       Handler: bank.getCompany
       Runtime: python3.6
-      CodeUri: s3://my-tefy-123/503086d0e6b5089ed9f6f5c0e12233b8
+      CodeUri: s3://finalproject-smm/4c46881079077d05efe383ca9ec37510
       Policies:
       - DynamoDBReadPolicy:
           TableName:
@@ -35,7 +69,7 @@ Resources:
       FunctionName: getClient
       Handler: client.getClient
       Runtime: python3.6
-      CodeUri: s3://myaws-upb-bucket/a7737919ac8ce5dd457d4b075c83dfa0
+      CodeUri: s3://finalproject-smm/4c46881079077d05efe383ca9ec37510
       Policies:
       - DynamoDBReadPolicy:
           TableName:
@@ -58,7 +92,7 @@ Resources:
       FunctionName: putClient
       Handler: client.putClient
       Runtime: python3.6
-      CodeUri: s3://myaws-upb-bucket/a7737919ac8ce5dd457d4b075c83dfa0
+      CodeUri: s3://finalproject-smm/4c46881079077d05efe383ca9ec37510
       Policies:
       - DynamoDBWritePolicy:
           TableName:
@@ -81,12 +115,19 @@ Resources:
       FunctionName: putTransaction
       Handler: client.putTransaction
       Runtime: python3.6
-      CodeUri: s3://myaws-upb-bucket/a7737919ac8ce5dd457d4b075c83dfa0
+      CodeUri: s3://finalproject-smm/4c46881079077d05efe383ca9ec37510
+      Role:
+        Fn::GetAtt:
+        - MyTransactionRole
+        - Arn
       Policies:
       - DynamoDBWritePolicy:
           TableName:
             Ref: BankTable
       - DynamoDBReadPolicy:
+          TableName:
+            Ref: BankTable
+      - DynamoDBFullAccess:
           TableName:
             Ref: BankTable
       Environment:
@@ -110,7 +151,7 @@ Resources:
         Fn::Transform:
           Name: AWS::Include
           Parameters:
-            Location: s3://myaws-upb-bucket/33a0f1f0dbfa45d7dc61562179f1d455
+            Location: s3://finalproject-smm/33a0f1f0dbfa45d7dc61562179f1d455
   BankTable:
     Type: AWS::DynamoDB::Table
     Properties:
