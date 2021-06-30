@@ -19,15 +19,23 @@ def getClient(event, context):
     path = event["path"]    #user/123
     array_path = path.split("/") ##[user,123]
     client_id = array_path[-1]
-   
+    
     response = table.get_item(
         Key={
             'pk': client_id,
             'sk': 'info'
         }
     )
-    item = response['Item']
-    print("imprimiendo item:",item)
+    
+    
+    try:
+        item = response['Item']
+    except:
+        return {
+        'statusCode': 500,
+        'body': json.dumps("No existe el cliente")
+        }
+   
     return {
         'statusCode': 200,
         'body': json.dumps(item)
@@ -46,6 +54,9 @@ def putClient(event, context):
     body_obj = json.loads(body)
     
     print("Imprimiendo path:",client_id)
+    
+    
+    
     
     table.put_item(
         Item={
@@ -90,15 +101,22 @@ def putTransaction(event, context):
     fecha = body_obj['fecha']
     
     #getClient emisor
+    
     response1 = table.get_item(
         Key={
             'pk': emisor,
             'sk': 'info'
         }
     )
-    print("printing response1", response1)
     
-    item_emisor = response1['Item']
+    print("printing response1", response1)
+    try:
+        item_emisor = response1['Item']
+    except:
+        return {
+        'statusCode': 500,
+        'body': json.dumps("No existe el cliente")
+        }
    
     company_id = item_emisor['company']
     company_p = "/company/" + company_id
@@ -113,11 +131,13 @@ def putTransaction(event, context):
     if "No Confiable" not in (answer['body']) :
         #seguimos con el procesos
     
+         #Primera anomalia max 6 transacciones por cliente
         responseT = table.scan(
             
+           
             ##KeyConditionExpression=Key('pk').begins_with('transaction') & Key('sk').eq('info'),
       
-            FilterExpression =Key('pk').begins_with('transaction') & Attr('emisor').eq(emisor) & Attr('fecha').eq(fecha) & Attr('receptor').eq(receptor)
+            FilterExpression =Key('pk').begins_with('transaction') & Attr('fecha').eq(fecha) & Attr('receptor').eq(receptor)
         )
         
         ##list_transactions = responseT['Items']
@@ -185,14 +205,23 @@ def putTransaction(event, context):
             #### 4. add el dinero a receptor
             
             #getClient receptor
+            
             response4 = table.get_item(
                 Key={
                     'pk': receptor,
                     'sk': 'info'
                 }
             )
+            
+                
             print("printing response4", json.dumps(response4))
-            item_receptor = response4['Item']
+            try:
+                item_receptor = response4['Item']
+            except:
+                return {
+                    'statusCode': 500,
+                    'body': json.dumps("No existe el receptor")
+                }
             
             dineroReceptor = item_receptor['moneyInAccount'].replace("$","")
             montoTotal = int(dineroReceptor) + int(montoStr)
@@ -212,13 +241,24 @@ def putTransaction(event, context):
                
                 }
             )
+            responseTrans = table.scan(
             
-            
+           
+            ##KeyConditionExpression=Key('pk').begins_with('transaction') & Key('sk').eq('info'),
+      
+                FilterExpression =Key('pk').begins_with('transaction')
+            )
+            print(json.dumps("antes del len.........."))
+            aux = len(responseTrans['Items'])
+            print(json.dumps(aux))
+            aux2 = "%03d" % (aux + 1)
+              
+
             #### 5. agregar la transaccion
             
             table.put_item(
                 Item={
-                    'pk': transaction_id,
+                    'pk': 'transaction_' + str(aux2),
                     'sk': 'info',
                     'emisor': body_obj['emisor'],
                     'receptor': body_obj['receptor'],
@@ -229,23 +269,47 @@ def putTransaction(event, context):
                
                 }
             )
-    
+        
     else:
         return {
         'statusCode': 200,
         'body': json.dumps('TRANSACCION NO COMPLETADA, COMPANY NO CONFIABLE')
     }
     
-   
-    
-    
-
     
     return {
         'statusCode': 200,
         'body': json.dumps('TRANSACCION CORRECTLY DONE')
     }
-    ##END ANDREA
     
+def getTransaction(event, context):
+        print(json.dumps({"running": True}))
+        print(json.dumps(event))
+        
+        path = event["path"]    #user/transaction_001
+        array_path = path.split("/") ##[user,transaction_001]
+        tran_id = array_path[-1]
+        
+        response = table.get_item(
+            Key={
+                'pk': tran_id,
+                'sk': 'info'
+            }
+        )
+        
+        
+        try:
+            item = response['Item']
+        except:
+            return {
+            'statusCode': 500,
+            'body': json.dumps("No existe transaccion")
+            }
+       
+        return {
+            'statusCode': 200,
+            'body': json.dumps(item)
+        }
+
     
     
