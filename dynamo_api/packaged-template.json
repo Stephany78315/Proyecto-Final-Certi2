@@ -9,7 +9,7 @@ Resources:
       FunctionName: getCompany
       Handler: bank.getCompany
       Runtime: python3.6
-      CodeUri: s3://my-tefy-123/7d569902ed3661e9aa99775cdeeb70db
+      CodeUri: s3://my-tefy-123/503086d0e6b5089ed9f6f5c0e12233b8
       Policies:
       - DynamoDBReadPolicy:
           TableName:
