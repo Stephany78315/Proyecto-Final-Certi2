@@ -1,5 +1,5 @@
 #!/bin/bash
-DEPLOYMENT_BUCKET="myaws-upb-bucket"
+DEPLOYMENT_BUCKET="finalproject-smm"
 
 while getopts ":bdp" OPTION; do
     case $OPTION in
@@ -25,10 +25,10 @@ fi
 
 if [[ $PACKAGE == 1 ]]
 then
-    aws cloudformation package --template-file template.yaml --s3-bucket $DEPLOYMENT_BUCKET --output-template-file packaged-template.json
+    aws cloudformation package --template-file templateSMM.yaml --s3-bucket $DEPLOYMENT_BUCKET --output-template-file packaged-template.json
 fi
 
 if [[ $DEPLOY == 1 ]]
 then
-    aws cloudformation deploy --template-file packaged-template.json --stack-name bank-stack --capabilities CAPABILITY_NAMED_IAM
+    aws cloudformation deploy --template-file packaged-template.json --stack-name projectstack-smm --capabilities CAPABILITY_NAMED_IAM
 fi
